@@ -24,13 +24,17 @@ class Resolve:
         except Exception as e:
             print(f"Failed to initialize Resolve: {e}")
 
-    def open(self, executable_path: str = 'C:/Program Files/Blackmagic Design/DaVinci Resolve/Resolve.exe', wait_time: int = 15) -> str:
+    def open(
+            self, executable_path: str = 'C:/Program Files/Blackmagic Design/DaVinci Resolve/Resolve.exe',
+            wait_time: int = 15, gui: str = '-gui'
+    ) -> str:
         """
         Attempts to open DaVinci Resolve if it is not already running.
 
         Args:
             executable_path (str): The file path to the DaVinci Resolve executable. Defaults to the typical installation path.
             wait_time (int): Time to wait (in seconds) after attempting to open DaVinci Resolve before checking if it's running. Defaults to 15 seconds.
+            gui (str): for now GUI use -nogui
 
         Returns:
             str: A message indicating whether Resolve was successfully opened, is already running, or if there was an error.
@@ -43,7 +47,10 @@ class Resolve:
             if 'Resolve.exe' in result.stdout:
                 return "DaVinci Resolve is already running."
 
-            subprocess.Popen([executable_path])
+            if gui == '-gui':
+                subprocess.Popen([executable_path])
+            elif gui == '-nogui':
+                subprocess.Popen(f'{executable_path} -nogui')
 
             time.sleep(wait_time)
 
