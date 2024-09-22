@@ -1,3 +1,6 @@
+import os
+import subprocess
+import time
 from .core import DaVinciResolveScript as bmd
 
 
@@ -9,9 +12,56 @@ class Resolve:
         Args:
             app (str): The name of the DaVinci Resolve application to connect to. Defaults to 'Resolve'.
         """
-        self.app = bmd.scriptapp(app)
-        self.media_storage = MediaStorage(self.app.GetMediaStorage())
-        self.project_manager = ProjectManager(self.app.GetProjectManager())
+        self.app = None
+        self.media_storage = None
+        self.project_manager = None
+
+        try:
+            self.app = bmd.scriptapp(app)
+            if self.app:
+                self.media_storage = MediaStorage(self.app.GetMediaStorage())
+                self.project_manager = ProjectManager(self.app.GetProjectManager())
+        except Exception as e:
+            print(f"Failed to initialize Resolve: {e}")
+
+    def open(
+            self, executable_path: str = 'C:/Program Files/Blackmagic Design/DaVinci Resolve/Resolve.exe',
+            wait_time: int = 15, gui: str = '-gui'
+    ) -> str:
+        """
+        Attempts to open DaVinci Resolve if it is not already running.
+
+        Args:
+            executable_path (str): The file path to the DaVinci Resolve executable. Defaults to the typical installation path.
+            wait_time (int): Time to wait (in seconds) after attempting to open DaVinci Resolve before checking if it's running. Defaults to 15 seconds.
+            gui (str): for now GUI use -nogui
+
+        Returns:
+            str: A message indicating whether Resolve was successfully opened, is already running, or if there was an error.
+        """
+        if not os.path.exists(executable_path):
+            return f"Error: Resolve executable not found at '{executable_path}'. Please check the path and try again."
+
+        try:
+            result = subprocess.run(['tasklist'], capture_output=True, text=True)
+            if 'Resolve.exe' in result.stdout:
+                return "DaVinci Resolve is already running."
+
+            if gui == '-gui':
+                subprocess.Popen([executable_path])
+            elif gui == '-nogui':
+                subprocess.Popen(f'{executable_path} -nogui')
+
+            time.sleep(wait_time)
+
+            result = subprocess.run(['tasklist'], capture_output=True, text=True)
+            if 'Resolve.exe' in result.stdout:
+                return "DaVinci Resolve opened successfully."
+            else:
+                return "Error: Failed to detect Resolve in the task list. Please verify if the application has started."
+
+        except Exception as e:
+            return f"Error: Failed to open DaVinci Resolve - {str(e)}"
 
     def get_media_storage(self):
         """
@@ -209,11 +259,51 @@ class Resolve:
         """
         return self.app.ExportBurnInPreset(preset_name, export_path)
 
-    def quit(self) -> None:
+    def quit(self) -> str:
         """
-        Quits the DaVinci Resolve application.
+        Attempts to quit the DaVinci Resolve application gracefully. If it fails to close, 
+        provides feedback to manually terminate the process.
+
+        Returns:
+            str: A message indicating whether DaVinci Resolve was closed successfully 
+            or if manual intervention is required.
         """
-        return self.app.Quit()
+        try:
+            self.app.Quit()
+
+            result = subprocess.run(['tasklist'], capture_output=True, text=True)
+
+            if 'Resolve.exe' not in result.stdout:
+                return 'DaVinci Resolve has been closed successfully.'
+
+            return 'DaVinci Resolve did not close. Please use the kill function to terminate it manually.'
+        
+        except AttributeError:
+            return 'Resolve application is not initialized. Cannot quit.'
+
+        except Exception as e:
+            return f'Failed to quit DaVinci Resolve: {e}'
+
+    def kill(self) -> str:
+        """
+        Forces the termination of the DaVinci Resolve application process.
+
+        Returns:
+            str: A message indicating whether DaVinci Resolve was successfully terminated 
+            or if an error occurred.
+        """
+        try:
+            # Forcefully kill DaVinci Resolve process using taskkill
+            result = subprocess.run(['taskkill', '/IM', 'Resolve.exe', '/F'], capture_output=True, text=True)
+
+            # Check the result of the taskkill command
+            if 'SUCCESS' in result.stdout:
+                return 'DaVinci Resolve has been forcefully terminated.'
+            else:
+                return 'Failed to terminate DaVinci Resolve. Process may not be running.'
+
+        except Exception as e:
+            return f'Failed to kill DaVinci Resolve: {e}'
 
 class MediaStorage:
     def __init__(self, media_storage):

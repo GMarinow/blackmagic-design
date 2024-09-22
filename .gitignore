@@ -163,3 +163,4 @@ cython_debug/
 dev*
 .pypirc
 _OLD/*
+Thumbs.db
