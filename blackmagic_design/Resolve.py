@@ -3,15 +3,217 @@ from .core import DaVinciResolveScript as bmd
 
 class Resolve:
     def __init__(self, app: str = 'Resolve'):
+        """
+        Initializes the Resolve class, wrapping the DaVinci Resolve application.
+
+        Args:
+            app (str): The name of the DaVinci Resolve application to connect to. Defaults to 'Resolve'.
+        """
         self.app = bmd.scriptapp(app)
         self.media_storage = MediaStorage(self.app.GetMediaStorage())
         self.project_manager = ProjectManager(self.app.GetProjectManager())
 
     def get_media_storage(self):
+        """
+        Returns the MediaStorage object for interacting with DaVinci Resolve's media storage.
+
+        Returns:
+            MediaStorage: The media storage interface.
+        """
         return self.media_storage
-    
+
     def get_project_manager(self):
+        """
+        Returns the ProjectManager object for interacting with DaVinci Resolve's project manager.
+
+        Returns:
+            ProjectManager: The project manager interface.
+        """
         return self.project_manager
+
+    def open_page(self, page_name: str) -> bool:
+        """
+        Switches to the indicated page in DaVinci Resolve.
+
+        Args:
+            page_name (str): The name of the page to switch to. Must be one of: 
+                             "media", "cut", "edit", "fusion", "color", "fairlight", "deliver".
+
+        Returns:
+            bool: True if the page was successfully opened, False otherwise.
+        """
+        valid_pages = ["media", "cut", "edit", "fusion", "color", "fairlight", "deliver"]
+        if page_name.lower() not in valid_pages:
+            raise ValueError(f"Invalid page name: {page_name}. Must be one of {valid_pages}.")
+        
+        return self.app.OpenPage(page_name.lower())
+
+    def get_current_page(self) -> str:
+        """
+        Returns the page currently displayed in the main window.
+
+        Returns:
+            str: The name of the currently active page. It can be one of:
+                 "media", "cut", "edit", "fusion", "color", "fairlight", "deliver", or None.
+        """
+        return self.app.GetCurrentPage()
+
+    def get_product_name(self) -> str:
+        """
+        Returns the product name of DaVinci Resolve.
+
+        Returns:
+            str: The product name.
+        """
+        return self.app.GetProductName()
+
+    def get_version(self) -> list:
+        """
+        Returns the version of DaVinci Resolve as a list of version fields.
+
+        Returns:
+            list: A list of product version fields in [major, minor, patch, build, suffix] format.
+        """
+        return self.app.GetVersion()
+
+    def get_version_string(self) -> str:
+        """
+        Returns the product version as a formatted string.
+
+        Returns:
+            str: The product version in "major.minor.patch[suffix].build" format.
+        """
+        return self.app.GetVersionString()
+
+    def load_layout_preset(self, preset_name: str) -> bool:
+        """
+        Loads a UI layout preset.
+
+        Args:
+            preset_name (str): The name of the preset to load.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.LoadLayoutPreset(preset_name)
+
+    def update_layout_preset(self, preset_name: str) -> bool:
+        """
+        Overwrites an existing UI layout preset.
+
+        Args:
+            preset_name (str): The name of the preset to overwrite.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.UpdateLayoutPreset(preset_name)
+
+    def export_layout_preset(self, preset_name: str, preset_file_path: str) -> bool:
+        """
+        Exports a UI layout preset to the specified file path.
+
+        Args:
+            preset_name (str): The name of the preset to export.
+            preset_file_path (str): The path to export the preset to.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.ExportLayoutPreset(preset_name, preset_file_path)
+
+    def delete_layout_preset(self, preset_name: str) -> bool:
+        """
+        Deletes a UI layout preset.
+
+        Args:
+            preset_name (str): The name of the preset to delete.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.DeleteLayoutPreset(preset_name)
+
+    def save_layout_preset(self, preset_name: str) -> bool:
+        """
+        Saves the current UI layout as a preset.
+
+        Args:
+            preset_name (str): The name to save the preset as.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.SaveLayoutPreset(preset_name)
+
+    def import_layout_preset(self, preset_file_path: str, preset_name: str = None) -> bool:
+        """
+        Imports a UI layout preset from a file path.
+
+        Args:
+            preset_file_path (str): The path to the preset file.
+            preset_name (str, optional): The name to save the preset as. Defaults to None.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.ImportLayoutPreset(preset_file_path, preset_name)
+
+    def import_render_preset(self, preset_path: str) -> bool:
+        """
+        Imports a render preset from a file path.
+
+        Args:
+            preset_path (str): The path to the render preset file.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.ImportRenderPreset(preset_path)
+
+    def export_render_preset(self, preset_name: str, export_path: str) -> bool:
+        """
+        Exports a render preset to a file path.
+
+        Args:
+            preset_name (str): The name of the preset to export.
+            export_path (str): The path to export the preset to.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.ExportRenderPreset(preset_name, export_path)
+
+    def import_burn_in_preset(self, preset_path: str) -> bool:
+        """
+        Imports a data burn-in preset from a file path.
+
+        Args:
+            preset_path (str): The path to the burn-in preset file.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.ImportBurnInPreset(preset_path)
+
+    def export_burn_in_preset(self, preset_name: str, export_path: str) -> bool:
+        """
+        Exports a data burn-in preset to a file path.
+
+        Args:
+            preset_name (str): The name of the preset to export.
+            export_path (str): The path to export the preset to.
+
+        Returns:
+            bool: True if successful, False otherwise.
+        """
+        return self.app.ExportBurnInPreset(preset_name, export_path)
+
+    def quit(self) -> None:
+        """
+        Quits the DaVinci Resolve application.
+        """
+        return self.app.Quit()
 
 class MediaStorage:
     def __init__(self, media_storage):
